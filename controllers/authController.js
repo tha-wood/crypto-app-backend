@@ -8,10 +8,8 @@ const generateToken = (id) => {
 };
 
 // @desc    Register a new user
-// @route   GET /register (from README) - NOTE: Ideally this should be POST, handled it to process data via query for GET or body for POST to be safe. Since frontend will send data, it will likely be POST if standard, but we'll adapt to POST first. Wait, user said "don't change it if that's what the readme specified."
-// This means the endpoint is GET /register. We will get data from req.query since it's a GET request.
+// @route   GET /register
 const registerUser = async (req, res) => {
-  // Try req.query first (for GET), fallback to req.body (if they actually mean POST)
   const name = req.query.name || req.body.name;
   const email = req.query.email || req.body.email;
   const password = req.query.password || req.body.password;
@@ -35,18 +33,12 @@ const registerUser = async (req, res) => {
 
     if (user) {
       const token = generateToken(user._id);
-      
-      res.cookie('jwt', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', 
-        sameSite: 'strict',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      });
 
       res.status(201).json({
         _id: user._id,
         name: user.name,
         email: user.email,
+        token,
         message: 'Registration successful',
       });
     } else {
@@ -72,18 +64,12 @@ const authUser = async (req, res) => {
 
     if (user && (await user.matchPassword(password))) {
       const token = generateToken(user._id);
-      
-      res.cookie('jwt', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 30 * 24 * 60 * 60 * 1000, 
-      });
 
       res.json({
         _id: user._id,
         name: user.name,
         email: user.email,
+        token,
         message: 'Login successful',
       });
     } else {
@@ -114,3 +100,4 @@ module.exports = {
   authUser,
   getUserProfile,
 };
+
